@@ -9,11 +9,13 @@ FROM node:lts-alpine AS cleaner
 WORKDIR /app
 COPY package.json .
 RUN npm install --omit=dev
-RUN npx mod-pruner prune --force && rm package-lock.json .npmrc
-COPY --from=builder /app/dist dist
+RUN npx mod-pruner prune --force
+COPY --from=builder /app/dist .
 
 FROM node:lts-alpine
 USER node
 WORKDIR /opt/service
+ENV PORT 5000
 COPY --from=cleaner /app ./
-CMD [ "node", "." ]
+EXPOSE ${PORT}
+CMD [ "node", "app.js" ]

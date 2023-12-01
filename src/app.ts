@@ -4,7 +4,7 @@ import { setupExpressMiddleware as useMiddleware } from "./servers";
 import { startup } from "./startup";
 
 const featureDirectory = join(__dirname, "features");
-const port = getValue("PORT", "8080");
+const port = getValue("PORT", "5000");
 
 startup({
   featureDirectory,

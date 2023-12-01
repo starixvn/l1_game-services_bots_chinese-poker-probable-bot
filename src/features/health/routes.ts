@@ -1,14 +1,7 @@
-import { IHttpPayload, IRoute, RouteType } from "../../common";
-import { responseOkMessage, responseServiceInfo } from "./handler";
+import { IRoute, RouteType } from "../../common";
+import { responseOkMessage } from "./handler";
 
 export const routes: IRoute[] = [
-  {
-    type: RouteType.HTTP,
-    path: "/",
-    method: "get",
-    handler: responseServiceInfo,
-    middleware: [],
-  },
   {
     type: RouteType.HTTP,
     path: "/health",
