@@ -29,3 +29,14 @@ content-type: application/json
         "input": [21, 3, 4, 31, 18, 48, 0, 9, 2, 16, 19, 39, 38]
     }
 }
+
+###
+
+POST http://localhost:5000/move
+content-type: application/json
+
+{
+    "private": {
+        "input": [3, 24, 16, 2, 0, 12, 35, 15, 50, 48, 47, 44, 46]
+    }
+}

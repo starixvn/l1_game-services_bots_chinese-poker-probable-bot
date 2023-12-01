@@ -73,11 +73,12 @@ export function excludeDuplicatedRanks(cards: Card[]): Card[] {
   return ranks.map(findBy("rank", cards));
 }
 
-export function getDuplicatedRanks(cards: Card[]): Card[] {
+export function getMostPopularRanks(cards: Card[]): Card[] {
   const sorted = sort(cards, compareRank);
   const { byRank } = count(sorted);
+  const popularRank = Math.max(...Object.values(byRank));
   const ranks = Object.keys(byRank)
-    .filter((rank) => byRank[rank] > 1)
+    .filter((rank) => byRank[rank] === popularRank)
     .map((rank) => Number(rank));
 
   return ranks.map(findBy("rank", cards));

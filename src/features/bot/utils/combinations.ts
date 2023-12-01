@@ -3,9 +3,9 @@ import {
   DeckCount,
   count,
   excludeDuplicatedRanks,
-  getDuplicatedRanks,
   getHighCardInStraight,
   getHighestCardByRank,
+  getMostPopularRanks,
   isFlush,
   isStraight,
   valueBy,
@@ -61,13 +61,13 @@ export function rank(cards: Card[]): number {
 export function highCardsByRank(cards: Card[], rank: number): Card[] {
   const highCardsGetters: Record<number, (cards: Card[]) => Card[]> = {
     [STRAIGHT_FLUSH]: (cards) => [getHighCardInStraight(cards)],
-    [FOUR_OF_A_KIND]: getDuplicatedRanks,
-    [FULL_HOUSE]: (cards) => getDuplicatedRanks(cards).slice(1),
+    [FOUR_OF_A_KIND]: getMostPopularRanks,
+    [FULL_HOUSE]: getMostPopularRanks,
     [FLUSH]: (cards) => [getHighestCardByRank(cards)],
     [STRAIGHT]: (cards) => [getHighCardInStraight(cards)],
-    [THREE_OF_A_KIND]: getDuplicatedRanks,
+    [THREE_OF_A_KIND]: getMostPopularRanks,
     [TWO_PAIRS]: excludeDuplicatedRanks,
-    [ONE_PAIR]: (cards) => getDuplicatedRanks(cards).slice(1),
+    [ONE_PAIR]: excludeDuplicatedRanks,
     [HIGH_CARD]: (card) => card,
   };
 
@@ -101,6 +101,10 @@ export function toCombination(cards: Card[]): Combination {
 export function greater(a: Combination, b: Combination): boolean {
   if (a.cards.length === b.cards.length) {
     return a.rank === b.rank ? a.value > b.value : a.rank < b.rank;
+  }
+
+  if (a.rank !== b.rank) {
+    return a.rank < b.rank;
   }
 
   let { highCards: highCardsOfA } = a;
