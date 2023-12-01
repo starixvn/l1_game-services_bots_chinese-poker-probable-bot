@@ -9,14 +9,11 @@ export type MoveInput = {
 };
 
 export type MoveOutput = {
-  shared?: unknown;
-  private: {
-    input: number[];
-    output: {
-      segment_1: number[];
-      segment_2: number[];
-      segment_3: number[];
-    };
+  input: number[];
+  output: {
+    segment_1: number[];
+    segment_2: number[];
+    segment_3: number[];
   };
 };
 
@@ -31,14 +28,11 @@ export function move(payload: MoveInput): MoveOutput {
   console.log("Output: %s", readableOutput);
 
   return {
-    ...payload,
-    private: {
-      ...payload.private,
-      output: {
-        segment_1: combinations[0].cards,
-        segment_2: combinations[1].cards,
-        segment_3: combinations[2].cards,
-      },
+    ...payload.private,
+    output: {
+      segment_1: combinations[0].cards,
+      segment_2: combinations[1].cards,
+      segment_3: combinations[2].cards,
     },
   };
 }
