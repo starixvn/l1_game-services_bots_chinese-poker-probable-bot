@@ -2,12 +2,14 @@ import { getMovement } from "./movements";
 import { prop, toCard } from "./utils";
 
 export type MoveInput = {
+  shared?: unknown;
   private: {
     input: number[];
   };
 };
 
 export type MoveOutput = {
+  shared?: unknown;
   private: {
     input: number[];
     output: {
@@ -29,6 +31,7 @@ export function move(payload: MoveInput): MoveOutput {
   console.log("Output: %s", readableOutput);
 
   return {
+    ...payload,
     private: {
       ...payload.private,
       output: {
