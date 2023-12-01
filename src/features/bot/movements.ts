@@ -59,14 +59,10 @@ export function getMovement(cards: Card[]): Movement {
       greater(combination1, combination2) &&
       greater(combination2, combination3)
     ) {
-      const score = Math.max(
-        combination1.probability * combination2.probability,
-        combination1.probability * combination3.probability,
-        combination3.probability * combination2.probability,
+      const score =
         combination1.probability *
-          combination2.probability *
-          combination3.probability,
-      );
+        combination2.probability *
+        combination3.probability;
 
       if (score > maxScore) {
         maxScore = score;
