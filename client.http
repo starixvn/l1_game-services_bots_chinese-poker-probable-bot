@@ -40,3 +40,15 @@ content-type: application/json
         "input": [3, 24, 16, 2, 0, 12, 35, 15, 50, 48, 47, 44, 46]
     }
 }
+
+###
+
+POST http://localhost:5000/move
+content-type: application/json
+
+{
+    "private": {
+        "input_hash": -7851446351016834348,
+        "input": [1, 4, 25, 8, 9, 10, 18, 19, 33, 35, 49, 50, 51]
+    }
+}

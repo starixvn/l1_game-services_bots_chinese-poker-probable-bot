@@ -1,5 +1,6 @@
 import { IHttpPayload, IRoute, RouteType } from "../../common";
 import { move } from "./handlers";
+import bigint from "json-bigint";
 
 export const routes: IRoute[] = [
   {
@@ -7,7 +8,7 @@ export const routes: IRoute[] = [
     path: "/move",
     method: "post",
     handler: ({ request, response }: IHttpPayload) => {
-      const result = move(request.body);
+      const result = move(request.bodyRaw);
 
       response.send(result);
     },
