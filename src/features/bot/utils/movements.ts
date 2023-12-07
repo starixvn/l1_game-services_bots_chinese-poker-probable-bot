@@ -1,12 +1,12 @@
-import arrangements from "./arrangements.json";
+import arrangements from "../arrangements.json";
+import { Card } from "./cards";
 import {
-  Card,
   Combination,
   calculateProbability,
-  getId,
   greater,
   toCombination,
-} from "./utils";
+} from "./combinations";
+import { getId } from "./decks";
 
 export type Movement = {
   probability: number;
@@ -75,14 +75,24 @@ export function getGroup(cards: Card[]): MovementGroup[] {
   return Object.values(record).sort((a, b) => a.probability - b.probability);
 }
 
+export function getTheBestMovementInGroup(group: MovementGroup): Movement {
+  return group.movements
+    .sort(
+      (a, b) =>
+        calculateProbability(b.combinations, "probabilityByScore") -
+        calculateProbability(a.combinations, "probabilityByScore"),
+    )
+    .at(0);
+}
+
 export function getMovement(cards: Card[]): Movement {
   const group = getGroup(cards);
-  const bestGroup = group[0];
-  const movements = bestGroup.movements.sort(
-    (a, b) =>
-      calculateProbability(b.combinations, "probabilityByScore") -
-      calculateProbability(a.combinations, "probabilityByScore"),
-  );
 
-  return movements[0];
+  return getTheBestMovementInGroup(group.at(0));
+}
+
+export function getMovements(cards: Card[]): Movement[] {
+  const group = getGroup(cards);
+
+  return group.map((g) => getTheBestMovementInGroup(g));
 }
