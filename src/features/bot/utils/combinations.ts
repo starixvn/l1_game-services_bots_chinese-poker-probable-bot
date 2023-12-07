@@ -21,6 +21,43 @@ export const TWO_PAIRS = 7;
 export const ONE_PAIR = 8;
 export const HIGH_CARD = 9;
 
+const originalProbabilities = {
+  five: {
+    [HIGH_CARD]: 1302540 / 2598960,
+    [ONE_PAIR]: 1098240 / 2598960,
+    [TWO_PAIRS]: 123552 / 2598960,
+    [THREE_OF_A_KIND]: 54912 / 2598960,
+    [STRAIGHT]: 10200 / 2598960,
+    [FLUSH]: 5108 / 2598960,
+    [FULL_HOUSE]: 3744 / 2598960,
+    [FOUR_OF_A_KIND]: 624 / 2598960,
+    [STRAIGHT_FLUSH]: 40 / 2598960,
+  },
+  three: {
+    [HIGH_CARD]: 18304 / 22100,
+    [ONE_PAIR]: 3744 / 22100,
+    [THREE_OF_A_KIND]: 52 / 22100,
+  },
+};
+const probabilitiesByScore = {
+  five: {
+    [HIGH_CARD]: (value: number) => (value - 143) / 156057,
+    [ONE_PAIR]: (value: number) => (value + 137114) / 156057,
+    [TWO_PAIRS]: (value: number) => (value + 154269) / 156057,
+    [THREE_OF_A_KIND]: (value: number) => (value + 155985) / 156057,
+    [STRAIGHT]: (value: number) => (value + 155995) / 156057,
+    [FLUSH]: (value: number) => (value + 156008) / 156057,
+    [FULL_HOUSE]: (value: number) => (value + 156021) / 156057,
+    [FOUR_OF_A_KIND]: (value: number) => (value + 156034) / 156057,
+    [STRAIGHT_FLUSH]: (value: number) => (value + 156044) / 156057,
+  },
+  three: {
+    [HIGH_CARD]: (value: number) => (value - 5) / 1878,
+    [ONE_PAIR]: (value: number) => (value + 1710) / 1878,
+    [THREE_OF_A_KIND]: (value: number) => (value + 1865) / 1878,
+  },
+};
+
 export type Combination = {
   readable: string;
   rank: number;
@@ -28,7 +65,8 @@ export type Combination = {
   count: DeckCount;
   value: number;
   highCards: Card[];
-  probability?: number;
+  probability: number;
+  probabilityByScore: number;
 };
 
 export function rank(cards: Card[]): number {
@@ -83,17 +121,27 @@ export function value(cards: Card[], rank: number): number {
 export function toCombination(cards: Card[]): Combination {
   const combinationRank = rank(cards);
   const highCards = highCardsByRank(cards, combinationRank);
+  const value = valueBy("rank", highCards);
+  const probability =
+    cards.length === 3
+      ? originalProbabilities.three[combinationRank]
+      : originalProbabilities.five[combinationRank];
+
+  const probabilityByScore =
+    cards.length === 3
+      ? probabilitiesByScore.three[combinationRank](value)
+      : probabilitiesByScore.five[combinationRank](value);
 
   const combination: Combination = {
     readable: cards.map(prop("readable")).join(" "),
     cards: cards.map(prop("id")),
     rank: combinationRank,
-    value: valueBy("rank", highCards),
+    value,
+    probability,
+    probabilityByScore,
     count: count(cards),
     highCards,
   };
-
-  combination.probability = probability(combination);
 
   return combination;
 }
@@ -117,71 +165,12 @@ export function greater(a: Combination, b: Combination): boolean {
   return valueBy("rank", highCardsOfA) >= valueBy("rank", highCardsOfB);
 }
 
-export function probability(combination: Combination): number {
-  const diffs = {
-    five: {
-      [HIGH_CARD]: 144,
-      [ONE_PAIR]: 24,
-      [TWO_PAIRS]: 6,
-      [THREE_OF_A_KIND]: 1,
-      [STRAIGHT]: 4,
-      [FLUSH]: 6,
-      [FULL_HOUSE]: 1,
-      [FOUR_OF_A_KIND]: 1,
-      [STRAIGHT_FLUSH]: 4,
-    },
-    three: {
-      [HIGH_CARD]: 6,
-      [ONE_PAIR]: 2,
-      [THREE_OF_A_KIND]: 1,
-    },
-  };
-
-  const counts = {
-    five: {
-      [HIGH_CARD]: 137137,
-      [ONE_PAIR]: 17137,
-      [TWO_PAIRS]: 1711,
-      [THREE_OF_A_KIND]: 13,
-      [STRAIGHT]: 10,
-      [FLUSH]: 8,
-      [FULL_HOUSE]: 13,
-      [FOUR_OF_A_KIND]: 13,
-      [STRAIGHT_FLUSH]: 10,
-    },
-    three: {
-      [HIGH_CARD]: 1711,
-      [ONE_PAIR]: 154,
-      [THREE_OF_A_KIND]: 13,
-    },
-  };
-
-  const ranks = [
-    STRAIGHT_FLUSH,
-    FOUR_OF_A_KIND,
-    FULL_HOUSE,
-    FLUSH,
-    STRAIGHT,
-    THREE_OF_A_KIND,
-    TWO_PAIRS,
-    ONE_PAIR,
-    HIGH_CARD,
-  ];
-
-  let currentDiffs: Record<number, number> = diffs.five;
-  let currentCounts: Record<number, number> = counts.five;
-
-  if (combination.cards.length === 3) {
-    currentDiffs = diffs.three;
-    currentCounts = counts.three;
-  }
-
-  const sampleSpace = Object.values(currentCounts).reduce((a, b) => a + b, 0);
-  const scoreAtCurrentRank = combination.value - currentDiffs[combination.rank];
-  const winRanks = ranks.filter((rank) => combination.rank < rank);
-  const winCombinations = winRanks
-    .map((rank) => currentCounts[rank] || 0)
-    .reduce((a, b) => a + b, 0);
-
-  return (winCombinations + scoreAtCurrentRank) / sampleSpace;
+export function calculateProbability(
+  combinations: Combination[],
+  property: keyof Combination = "probability",
+): number {
+  return combinations.reduce(
+    (result, combination) => result * Number(combination[property]),
+    1,
+  );
 }

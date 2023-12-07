@@ -1,9 +1,21 @@
-import combinations from "./combinations.json";
-import { Card, Combination, getId, greater, toCombination } from "./utils";
+import arrangements from "./arrangements.json";
+import {
+  Card,
+  Combination,
+  calculateProbability,
+  getId,
+  greater,
+  toCombination,
+} from "./utils";
 
 export type Movement = {
   probability: number;
   combinations: Combination[];
+};
+
+export type MovementGroup = {
+  probability: number;
+  movements: Movement[];
 };
 
 export function getSegments(cards: Card[], index: number[]): Card[][] {
@@ -28,52 +40,49 @@ export function getSegments(cards: Card[], index: number[]): Card[][] {
   return [segment1, segment2, segment3];
 }
 
-export function getMovement(cards: Card[]): Movement {
+export function getGroup(cards: Card[]): MovementGroup[] {
   const caches: Record<string, Combination> = {};
-  let maxScore = 0;
-  let result: Movement = undefined;
 
-  combinations.forEach((index) => {
-    const [segment1, segment2, segment3] = getSegments(cards, index);
-    const id1 = getId(segment1);
-    const id2 = getId(segment2);
-    const id3 = getId(segment3);
+  const record = arrangements.reduce((group, arrangement) => {
+    const segments = getSegments(cards, arrangement);
+    const [segment1, segment2, segment3] = segments.map((segment) => {
+      const id = getId(segment);
 
-    if (!caches[id1]) {
-      caches[id1] = toCombination(segment1);
-    }
+      if (!caches[id]) {
+        caches[id] = toCombination(segment);
+      }
 
-    if (!caches[id2]) {
-      caches[id2] = toCombination(segment2);
-    }
+      return caches[id];
+    });
 
-    if (!caches[id3]) {
-      caches[id3] = toCombination(segment3);
-    }
+    if (greater(segment1, segment2) && greater(segment2, segment3)) {
+      const probability = calculateProbability([segment1, segment2, segment3]);
+      const movement: Movement = {
+        probability,
+        combinations: [segment1, segment2, segment3],
+      };
 
-    const combination1 = caches[id1];
-    const combination2 = caches[id2];
-    const combination3 = caches[id3];
-
-    if (
-      greater(combination1, combination2) &&
-      greater(combination2, combination3)
-    ) {
-      const score =
-        combination1.probability *
-        combination2.probability *
-        combination3.probability;
-
-      if (score > maxScore) {
-        maxScore = score;
-
-        result = {
-          probability: score,
-          combinations: [combination1, combination2, combination3],
-        };
+      if (group[probability]) {
+        group[probability].movements.push(movement);
+      } else {
+        group[probability] = { probability, movements: [movement] };
       }
     }
-  });
 
-  return result;
+    return group;
+  }, {} as Record<number, MovementGroup>);
+
+  return Object.values(record).sort((a, b) => a.probability - b.probability);
+}
+
+export function getMovement(cards: Card[]): Movement {
+  const group = getGroup(cards);
+  const bestGroup = group[0];
+  const movements = bestGroup.movements.sort(
+    (a, b) =>
+      calculateProbability(b.combinations, "probabilityByScore") -
+      calculateProbability(a.combinations, "probabilityByScore"),
+  );
+
+  return movements[0];
 }
