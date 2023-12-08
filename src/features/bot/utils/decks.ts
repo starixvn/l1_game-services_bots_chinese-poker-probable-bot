@@ -87,3 +87,11 @@ export function getMostPopularRanks(cards: Card[]): Card[] {
 export function valueBy(prop: keyof Card, cards: Card[]): number {
   return cards.reduce((result, card) => result * (Number(card[prop]) + 1), 1);
 }
+
+export function powBy(prop: keyof Card, cards: Card[]): number {
+  return cards.reduce(
+    (result, card, index) =>
+      (Number(card[prop]) + 1) * Math.pow(13, index) + result,
+    0,
+  );
+}

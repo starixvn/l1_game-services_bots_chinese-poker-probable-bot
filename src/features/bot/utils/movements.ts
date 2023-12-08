@@ -94,5 +94,5 @@ export function getMovement(cards: Card[]): Movement {
 export function getMovements(cards: Card[]): Movement[] {
   const group = getGroup(cards);
 
-  return group.map((g) => getTheBestMovementInGroup(g));
+  return group.map((g) => getTheBestMovementInGroup(g)).slice(0, 5);
 }

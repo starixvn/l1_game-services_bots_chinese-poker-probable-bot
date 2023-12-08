@@ -1,4 +1,4 @@
-import { Card, prop } from "./cards";
+import { Card, compareRank, prop, sort } from "./cards";
 import {
   DeckCount,
   count,
@@ -8,6 +8,7 @@ import {
   getMostPopularRanks,
   isFlush,
   isStraight,
+  powBy,
   valueBy,
 } from "./decks";
 
@@ -106,7 +107,7 @@ export function highCardsByRank(cards: Card[], rank: number): Card[] {
     [THREE_OF_A_KIND]: getMostPopularRanks,
     [TWO_PAIRS]: excludeDuplicatedRanks,
     [ONE_PAIR]: excludeDuplicatedRanks,
-    [HIGH_CARD]: (card) => card,
+    [HIGH_CARD]: (cards) => sort(cards, compareRank),
   };
 
   return highCardsGetters[rank](cards);
@@ -162,7 +163,7 @@ export function greater(a: Combination, b: Combination): boolean {
   highCardsOfA = highCardsOfA.slice(highCardsOfA.length - length);
   highCardsOfB = highCardsOfB.slice(highCardsOfB.length - length);
 
-  return valueBy("rank", highCardsOfA) >= valueBy("rank", highCardsOfB);
+  return powBy("rank", highCardsOfA) >= powBy("rank", highCardsOfB);
 }
 
 export function calculateProbability(

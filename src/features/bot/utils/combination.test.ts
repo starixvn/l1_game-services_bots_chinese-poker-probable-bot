@@ -189,7 +189,17 @@ describe(highCardsByRank.name, () => {
           { rank: 0, suit: 0, id: 0, readable: "2♠" },
         ],
       ],
-      [HIGH_CARD, fiveCards[HIGH_CARD], fiveCards[HIGH_CARD]],
+      [
+        HIGH_CARD,
+        fiveCards[HIGH_CARD],
+        [
+          { rank: 0, suit: 0, id: 0, readable: "2♠" },
+          { rank: 2, suit: 0, id: 8, readable: "4♠" },
+          { rank: 3, suit: 0, id: 12, readable: "5♠" },
+          { rank: 4, suit: 1, id: 17, readable: "6♣" },
+          { rank: 12, suit: 0, id: 48, readable: "A♠" },
+        ],
+      ],
       [
         THREE_OF_A_KIND,
         threeCards[THREE_OF_A_KIND],
