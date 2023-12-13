@@ -1,4 +1,6 @@
+import { Card } from "./cards";
 import {
+  Combination,
   FLUSH,
   FOUR_OF_A_KIND,
   FULL_HOUSE,
@@ -8,8 +10,10 @@ import {
   STRAIGHT_FLUSH,
   THREE_OF_A_KIND,
   TWO_PAIRS,
-  highCardsByRank,
+  greater,
+  multiply,
   rank,
+  toCombination,
   value,
 } from "./combinations";
 
@@ -141,104 +145,21 @@ describe(rank.name, () => {
   });
 });
 
-describe(highCardsByRank.name, () => {
-  describe("when called", () => {
-    test.each([
-      [
-        STRAIGHT_FLUSH,
-        fiveCards[STRAIGHT_FLUSH],
-        [{ rank: 3, suit: 0, id: 12, readable: "5♠" }],
-      ],
-      [
-        FOUR_OF_A_KIND,
-        fiveCards[FOUR_OF_A_KIND],
-        [{ rank: 0, suit: 0, id: 0, readable: "2♠" }],
-      ],
-      [
-        FULL_HOUSE,
-        fiveCards[FULL_HOUSE],
-        [{ rank: 0, suit: 0, id: 0, readable: "2♠" }],
-      ],
-      [FLUSH, fiveCards[FLUSH], [{ rank: 5, suit: 0, id: 20, readable: "7♠" }]],
-      [
-        STRAIGHT,
-        fiveCards[STRAIGHT],
-        [{ rank: 4, suit: 1, id: 17, readable: "6♣" }],
-      ],
-      [
-        THREE_OF_A_KIND,
-        fiveCards[THREE_OF_A_KIND],
-        [{ rank: 0, suit: 0, id: 0, readable: "2♠" }],
-      ],
-      [
-        TWO_PAIRS,
-        fiveCards[TWO_PAIRS],
-        [
-          { rank: 1, suit: 0, id: 4, readable: "3♠" },
-          { rank: 0, suit: 1, id: 1, readable: "2♣" },
-          { rank: 12, suit: 0, id: 48, readable: "A♠" },
-        ],
-      ],
-      [
-        ONE_PAIR,
-        fiveCards[ONE_PAIR],
-        [
-          { rank: 2, suit: 0, id: 8, readable: "4♠" },
-          { rank: 3, suit: 0, id: 12, readable: "5♠" },
-          { rank: 4, suit: 1, id: 17, readable: "6♣" },
-          { rank: 0, suit: 0, id: 0, readable: "2♠" },
-        ],
-      ],
-      [
-        HIGH_CARD,
-        fiveCards[HIGH_CARD],
-        [
-          { rank: 0, suit: 0, id: 0, readable: "2♠" },
-          { rank: 2, suit: 0, id: 8, readable: "4♠" },
-          { rank: 3, suit: 0, id: 12, readable: "5♠" },
-          { rank: 4, suit: 1, id: 17, readable: "6♣" },
-          { rank: 12, suit: 0, id: 48, readable: "A♠" },
-        ],
-      ],
-      [
-        THREE_OF_A_KIND,
-        threeCards[THREE_OF_A_KIND],
-        [{ rank: 0, suit: 0, id: 0, readable: "2♠" }],
-      ],
-      [
-        ONE_PAIR,
-        threeCards[ONE_PAIR],
-        [
-          { rank: 2, suit: 0, id: 8, readable: "4♠" },
-          { rank: 0, suit: 0, id: 0, readable: "2♠" },
-        ],
-      ],
-      [HIGH_CARD, threeCards[HIGH_CARD], threeCards[HIGH_CARD]],
-    ])("the rank is %p, should return high cards", (rank, cards, highCards) => {
-      // Act
-      const actual = highCardsByRank(cards, rank);
-
-      // Assert
-      expect(actual).toStrictEqual(highCards);
-    });
-  });
-});
-
 describe(value.name, () => {
   describe("when called", () => {
     test.each([
-      [STRAIGHT_FLUSH, fiveCards[STRAIGHT_FLUSH], 4],
-      [FOUR_OF_A_KIND, fiveCards[FOUR_OF_A_KIND], 1],
-      [FULL_HOUSE, fiveCards[FULL_HOUSE], 1],
-      [FLUSH, fiveCards[FLUSH], 6],
-      [STRAIGHT, fiveCards[STRAIGHT], 5],
-      [THREE_OF_A_KIND, fiveCards[THREE_OF_A_KIND], 1],
-      [TWO_PAIRS, fiveCards[TWO_PAIRS], 26],
-      [ONE_PAIR, fiveCards[ONE_PAIR], 60],
-      [HIGH_CARD, fiveCards[HIGH_CARD], 780],
-      [THREE_OF_A_KIND, threeCards[THREE_OF_A_KIND], 1],
-      [ONE_PAIR, threeCards[ONE_PAIR], 3],
-      [HIGH_CARD, threeCards[HIGH_CARD], 60],
+      [STRAIGHT_FLUSH, fiveCards[STRAIGHT_FLUSH], 121199],
+      [FOUR_OF_A_KIND, fiveCards[FOUR_OF_A_KIND], 30953],
+      [FULL_HOUSE, fiveCards[FULL_HOUSE], 31109],
+      [FLUSH, fiveCards[FLUSH], 180688],
+      [STRAIGHT, fiveCards[STRAIGHT], 152127],
+      [THREE_OF_A_KIND, fiveCards[THREE_OF_A_KIND], 31098],
+      [TWO_PAIRS, fiveCards[TWO_PAIRS], 400038],
+      [ONE_PAIR, fiveCards[ONE_PAIR], 31658],
+      [HIGH_CARD, fiveCards[HIGH_CARD], 382994],
+      [THREE_OF_A_KIND, threeCards[THREE_OF_A_KIND], 30927],
+      [ONE_PAIR, threeCards[ONE_PAIR], 31265],
+      [HIGH_CARD, threeCards[HIGH_CARD], 152100],
     ])(
       "the rank is %p, should return value of combination",
       (rank, cards, combinationValue) => {
@@ -249,5 +170,83 @@ describe(value.name, () => {
         expect(actual).toStrictEqual(combinationValue);
       },
     );
+  });
+});
+
+describe(greater.name, () => {
+  describe("when the combination's rank is difference", () => {
+    describe("and the rank is smaller", () => {
+      it("should return true", () => {
+        // Act
+        const actual = greater(
+          { rank: 0 } as Combination,
+          { rank: 1 } as Combination,
+        );
+
+        // Assert
+        expect(actual).toBeTruthy();
+      });
+    });
+  });
+
+  describe("when the combination's rank is equals", () => {
+    it("should compare the value", () => {
+      // Act
+      const actual = greater(
+        { rank: 0, value: 1 } as Combination,
+        { rank: 0, value: 0 } as Combination,
+      );
+
+      // Assert
+      expect(actual).toBeTruthy();
+    });
+  });
+});
+
+describe(multiply.name, () => {
+  describe("when called", () => {
+    it("should return as expected", () => {
+      // Act
+      const actual = multiply(
+        [{ value: 2 } as Combination, { value: 2 } as Combination],
+        "value",
+      );
+
+      // Assert
+      expect(actual).toBe(4);
+    });
+  });
+});
+
+describe(toCombination.name, () => {
+  describe("when called", () => {
+    test.each([
+      [
+        fiveCards[STRAIGHT_FLUSH],
+        {
+          readable: "A♠ 2♠ 3♠ 4♠ 5♠",
+          cards: fiveCards[STRAIGHT_FLUSH],
+          rank: STRAIGHT_FLUSH,
+          value: 121199,
+          rarity: 40 / 2598960,
+        },
+      ],
+      [
+        threeCards[THREE_OF_A_KIND],
+        {
+          readable: "2♠ 2♣ 2♦",
+          cards: threeCards[THREE_OF_A_KIND],
+          rank: THREE_OF_A_KIND,
+          value: 30927,
+          rarity: 52 / 22100,
+        },
+      ],
+    ])("should return as expected", (cards: Card[], expected: Combination) => {
+      // Act
+      const actual = toCombination(cards);
+
+      // Assert
+      expect(actual).toStrictEqual(expected);
+    });
   });
 });

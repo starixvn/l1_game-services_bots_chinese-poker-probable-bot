@@ -27,9 +27,9 @@ export type SuggestOutput = {
 
 function movementToOutput({ combinations }: Movement) {
   return {
-    segment_1: combinations[0].cards,
-    segment_2: combinations[1].cards,
-    segment_3: combinations[2].cards,
+    segment_1: combinations[0].cards.map(prop("id")),
+    segment_2: combinations[1].cards.map(prop("id")),
+    segment_3: combinations[2].cards.map(prop("id")),
   };
 }
 
@@ -39,7 +39,7 @@ export function move(payload: MoveInput): MoveOutput {
   const movement = getMovement(cards);
   const readableInput = cards.map(prop("readable")).join(" ");
 
-  console.log("move: %s", readableInput);
+  console.log("move: %s %s", input.join(", "), readableInput);
 
   return {
     ...payload.private,
@@ -53,7 +53,7 @@ export function suggest(payload: MoveInput): SuggestOutput {
   const movements = getMovements(cards);
   const readableInput = cards.map(prop("readable")).join(" ");
 
-  console.log("suggest: %s", readableInput);
+  console.log("suggest: %s %s", input.join(", "), readableInput);
 
   return {
     ...payload.private,

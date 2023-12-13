@@ -3,9 +3,6 @@ import { sort, compareSuit, compareRank, prop, Card } from "./cards";
 export type DeckCount = {
   byRank: Record<number, number>;
   byRankReverse: Record<number, number>;
-
-  bySuit: Record<number, number>;
-  bySuitReverse: Record<number, number>;
 };
 
 export function isFlush(cards: Card[]): boolean {
@@ -37,55 +34,28 @@ export function count(cards: Card[]): DeckCount {
   const byRank = cards.map(prop("rank")).reduce(count, {});
   const byRankReverse = Object.values(byRank).reduce(count, {});
 
-  const bySuit = cards.map(prop("suit")).reduce(count, {});
-  const bySuitReverse = Object.values(bySuit).reduce(count, {});
-
-  return { byRank, byRankReverse, bySuit, bySuitReverse };
+  return { byRank, byRankReverse };
 }
 
-export function findBy(prop: keyof Card, cards: Card[]) {
-  return function (value: number) {
-    return cards.find((card) => card[prop] === value);
-  };
-}
-
-export function getHighCardInStraight(cards: Card[]): Card {
-  const sorted = sort(cards, compareRank);
-  const min = sorted.at(0);
-  const max = sorted.at(-1);
-
-  return max.rank - min.rank > 4 ? sorted.at(-2) : max;
-}
-
-export function getHighestCardByRank(cards: Card[]): Card {
+export function sortByStraight(cards: Card[]): Card[] {
   const sorted = sort(cards, compareRank);
 
-  return sorted.at(-1);
+  if (sorted.at(0).rank === 0 && sorted.at(-1).rank === 12) {
+    const last = sorted.pop();
+
+    sorted.unshift(last);
+  }
+
+  return sorted;
 }
 
-export function excludeDuplicatedRanks(cards: Card[]): Card[] {
+export function sortByPopularRank(cards: Card[]): Card[] {
   const sorted = sort(cards, compareRank);
   const { byRank } = count(sorted);
-  const ranks = Object.keys(byRank)
-    .map((x) => Number(x))
-    .sort((a, b) => byRank[a] - byRank[b]);
 
-  return ranks.map(findBy("rank", cards));
-}
-
-export function getMostPopularRanks(cards: Card[]): Card[] {
-  const sorted = sort(cards, compareRank);
-  const { byRank } = count(sorted);
-  const popularRank = Math.max(...Object.values(byRank));
-  const ranks = Object.keys(byRank)
-    .filter((rank) => byRank[rank] === popularRank)
-    .map((rank) => Number(rank));
-
-  return ranks.map(findBy("rank", cards));
-}
-
-export function valueBy(prop: keyof Card, cards: Card[]): number {
-  return cards.reduce((result, card) => result * (Number(card[prop]) + 1), 1);
+  return [1, 2, 3, 4].flatMap((count) =>
+    sorted.filter((card) => byRank[card.rank] === count),
+  );
 }
 
 export function powBy(prop: keyof Card, cards: Card[]): number {

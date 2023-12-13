@@ -41,10 +41,14 @@ export function sort(cards: Card[], compareFn: (a: Card, b: Card) => number) {
   return [...cards].sort(compareFn);
 }
 
-export function compareSuit(a: Card, b: Card): number {
-  return a.suit - b.suit;
+export function compareBy<P extends keyof Card>(property: P, reverse = false) {
+  return function (a: Card, b: Card): number {
+    const result = Number(prop(property)(a)) - Number(prop(property)(b));
+
+    return reverse ? -result : result;
+  };
 }
 
-export function compareRank(a: Card, b: Card): number {
-  return a.rank - b.rank;
-}
+export const compareSuit = compareBy("suit");
+
+export const compareRank = compareBy("rank");

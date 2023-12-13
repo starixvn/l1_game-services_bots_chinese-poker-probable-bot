@@ -1,20 +1,15 @@
 import arrangements from "../arrangements.json";
 import { Card } from "./cards";
-import {
-  Combination,
-  calculateProbability,
-  greater,
-  toCombination,
-} from "./combinations";
+import { Combination, multiply, greater, toCombination } from "./combinations";
 import { getId } from "./decks";
 
 export type Movement = {
-  probability: number;
+  rarity: number;
   combinations: Combination[];
 };
 
 export type MovementGroup = {
-  probability: number;
+  rarity: number;
   movements: Movement[];
 };
 
@@ -56,31 +51,30 @@ export function getGroup(cards: Card[]): MovementGroup[] {
     });
 
     if (greater(segment1, segment2) && greater(segment2, segment3)) {
-      const probability = calculateProbability([segment1, segment2, segment3]);
+      const rarity = multiply([segment1, segment2, segment3], "rarity");
       const movement: Movement = {
-        probability,
+        rarity,
         combinations: [segment1, segment2, segment3],
       };
 
-      if (group[probability]) {
-        group[probability].movements.push(movement);
+      if (group[rarity]) {
+        group[rarity].movements.push(movement);
       } else {
-        group[probability] = { probability, movements: [movement] };
+        group[rarity] = { rarity: rarity, movements: [movement] };
       }
     }
 
     return group;
   }, {} as Record<number, MovementGroup>);
 
-  return Object.values(record).sort((a, b) => a.probability - b.probability);
+  return Object.values(record).sort((a, b) => a.rarity - b.rarity);
 }
 
 export function getTheBestMovementInGroup(group: MovementGroup): Movement {
   return group.movements
     .sort(
       (a, b) =>
-        calculateProbability(b.combinations, "probabilityByScore") -
-        calculateProbability(a.combinations, "probabilityByScore"),
+        multiply(b.combinations, "value") - multiply(a.combinations, "value"),
     )
     .at(0);
 }

@@ -1,4 +1,11 @@
-import { compareRank, compareSuit, prop, sort, toCard } from "./cards";
+import {
+  compareBy,
+  compareRank,
+  compareSuit,
+  prop,
+  sort,
+  toCard,
+} from "./cards";
 
 const card1 = { rank: 0, suit: 0, id: 0, readable: "2♠" };
 const card2 = { rank: 12, suit: 3, id: 51, readable: "A♥" };
@@ -62,6 +69,18 @@ describe(compareRank.name, () => {
 
       // Assert
       expect(result).toBe(-12);
+    });
+  });
+});
+
+describe(compareBy.name, () => {
+  describe("when called", () => {
+    it("should return subtraction of the rank of two cards", () => {
+      // Act
+      const result = compareBy("rank", true)(card1, card2);
+
+      // Assert
+      expect(result).toBe(12);
     });
   });
 });
