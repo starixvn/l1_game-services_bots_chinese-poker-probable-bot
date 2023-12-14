@@ -11,7 +11,8 @@
     "pretest": "npm install jest-junit ts-jest jest --no-save",
     "test": "jest",
     "build": "tsc -b tsconfig.build.json",
-    "start": "nodemon ./src/app.ts"
+    "start": "nodemon ./src/app.ts",
+    "test-coverage": "jest"
   },
   "dependencies": {
     "cors": "2.8.5",
