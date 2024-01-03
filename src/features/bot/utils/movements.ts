@@ -1,7 +1,15 @@
 import arrangements from "../arrangements.json";
 import { Card } from "./cards";
-import { Combination, multiply, greater, toCombination } from "./combinations";
-import { getId } from "./decks";
+import {
+  Combination,
+  multiply,
+  greater,
+  toCombination,
+  FLUSH,
+  STRAIGHT,
+  STRAIGHT_FLUSH,
+} from "./combinations";
+import { getId, isFlush, isSixPairs, isStraight } from "./decks";
 
 export type Movement = {
   rarity: number;
@@ -35,6 +43,36 @@ export function getSegments(cards: Card[], index: number[]): Card[][] {
   return [segment1, segment2, segment3];
 }
 
+export function isNotBreak(segments: Combination[]): boolean {
+  const [segment1, segment2, segment3] = segments;
+
+  return greater(segment1, segment2) && greater(segment2, segment3);
+}
+
+export function naturalWin([
+  segment1,
+  segment2,
+  segment3,
+]: Combination[]): boolean {
+  const threeFlush =
+    (segment1.rank === FLUSH || segment1.rank === STRAIGHT_FLUSH) &&
+    (segment2.rank === FLUSH || segment2.rank === STRAIGHT_FLUSH) &&
+    isFlush(segment3.cards);
+
+  const threeStraight =
+    (segment1.rank === STRAIGHT || segment1.rank === STRAIGHT_FLUSH) &&
+    (segment2.rank === STRAIGHT || segment2.rank === STRAIGHT_FLUSH) &&
+    isStraight(segment3.cards);
+
+  const sixPairs = isSixPairs([
+    ...segment1.cards,
+    ...segment2.cards,
+    ...segment3.cards,
+  ]);
+
+  return threeFlush || threeStraight || sixPairs;
+}
+
 export function getGroup(cards: Card[]): MovementGroup[] {
   const caches: Record<string, Combination> = {};
 
@@ -50,8 +88,11 @@ export function getGroup(cards: Card[]): MovementGroup[] {
       return caches[id];
     });
 
-    if (greater(segment1, segment2) && greater(segment2, segment3)) {
-      const rarity = multiply([segment1, segment2, segment3], "rarity");
+    if (isNotBreak([segment1, segment2, segment3])) {
+      const rarity = naturalWin([segment1, segment2, segment3])
+        ? 0
+        : multiply([segment1, segment2, segment3], "rarity");
+
       const movement: Movement = {
         rarity,
         combinations: [segment1, segment2, segment3],

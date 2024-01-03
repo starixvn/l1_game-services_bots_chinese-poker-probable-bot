@@ -65,3 +65,13 @@ export function powBy(prop: keyof Card, cards: Card[]): number {
     0,
   );
 }
+
+export function isSixPairs(cards: Card[]): boolean {
+  const { byRankReverse } = count(cards);
+
+  return (
+    byRankReverse[2] === 6 ||
+    (byRankReverse[3] && byRankReverse[2] === 5) ||
+    (byRankReverse[4] && byRankReverse[2] === 4)
+  );
+}
