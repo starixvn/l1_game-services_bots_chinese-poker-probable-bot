@@ -1,27 +1,24 @@
 import arrangements from "../arrangements.json";
 import { Card } from "./cards";
-import {
-  Combination,
-  multiply,
-  greater,
-  toCombination,
-  FLUSH,
-  STRAIGHT,
-  STRAIGHT_FLUSH,
-} from "./combinations";
-import { getId, isFlush, isSixPairs, isStraight } from "./decks";
+import { Combination, multiply, greater, toCombination } from "./combinations";
+import { getId } from "./decks";
 
 export type Movement = {
   rarity: number;
+  value: number;
   combinations: Combination[];
 };
 
-export type MovementGroup = {
+export type MovementRarityGroup = {
   rarity: number;
   movements: Movement[];
 };
 
-export function getSegments(cards: Card[], index: number[]): Card[][] {
+function getSegments(
+  cards: Card[],
+  index: number[],
+  caches: Record<string, Combination>,
+): Combination[] {
   const segment1 = [
     cards[index[0]],
     cards[index[1]],
@@ -40,94 +37,71 @@ export function getSegments(cards: Card[], index: number[]): Card[][] {
 
   const segment3 = [cards[index[10]], cards[index[11]], cards[index[12]]];
 
-  return [segment1, segment2, segment3];
+  return [segment1, segment2, segment3].map((segment) => {
+    const id = getId(segment);
+
+    if (!caches[id]) {
+      caches[id] = toCombination(segment);
+    }
+
+    return caches[id];
+  });
 }
 
-export function isNotBreak(segments: Combination[]): boolean {
-  const [segment1, segment2, segment3] = segments;
-
-  return greater(segment1, segment2) && greater(segment2, segment3);
-}
-
-export function naturalWin([
-  segment1,
-  segment2,
-  segment3,
-]: Combination[]): boolean {
-  const threeFlush =
-    (segment1.rank === FLUSH || segment1.rank === STRAIGHT_FLUSH) &&
-    (segment2.rank === FLUSH || segment2.rank === STRAIGHT_FLUSH) &&
-    isFlush(segment3.cards);
-
-  const threeStraight =
-    (segment1.rank === STRAIGHT || segment1.rank === STRAIGHT_FLUSH) &&
-    (segment2.rank === STRAIGHT || segment2.rank === STRAIGHT_FLUSH) &&
-    isStraight(segment3.cards);
-
-  const sixPairs = isSixPairs([
-    ...segment1.cards,
-    ...segment2.cards,
-    ...segment3.cards,
-  ]);
-
-  return threeFlush || threeStraight || sixPairs;
-}
-
-export function getGroup(cards: Card[]): MovementGroup[] {
+function getValidArrangements(cards: Card[]): Movement[] {
   const caches: Record<string, Combination> = {};
 
-  const record = arrangements.reduce((group, arrangement) => {
-    const segments = getSegments(cards, arrangement);
-    const [segment1, segment2, segment3] = segments.map((segment) => {
-      const id = getId(segment);
+  return arrangements
+    .map((arrangement) => {
+      const segments = getSegments(cards, arrangement, caches);
+      const notBreak =
+        greater(segments[0], segments[1]) && greater(segments[1], segments[2]);
 
-      if (!caches[id]) {
-        caches[id] = toCombination(segment);
+      if (notBreak) {
+        const rarity = multiply(segments, "rarity");
+        const value = multiply(segments, "value");
+
+        return {
+          rarity,
+          value,
+          combinations: segments,
+        };
       }
+    }, [])
+    .filter((x) => x);
+}
 
-      return caches[id];
-    });
+function buildGroupByRarity(cards: Card[]): MovementRarityGroup[] {
+  const movements = getValidArrangements(cards);
 
-    if (isNotBreak([segment1, segment2, segment3])) {
-      const rarity = naturalWin([segment1, segment2, segment3])
-        ? 0
-        : multiply([segment1, segment2, segment3], "rarity");
-
-      const movement: Movement = {
-        rarity,
-        combinations: [segment1, segment2, segment3],
+  const record = movements.reduce((group, movement) => {
+    if (group[movement.rarity]) {
+      group[movement.rarity].movements.push(movement);
+    } else {
+      group[movement.rarity] = {
+        rarity: movement.rarity,
+        movements: [movement],
       };
-
-      if (group[rarity]) {
-        group[rarity].movements.push(movement);
-      } else {
-        group[rarity] = { rarity: rarity, movements: [movement] };
-      }
     }
 
     return group;
-  }, {} as Record<number, MovementGroup>);
+  }, {} as Record<number, MovementRarityGroup>);
 
   return Object.values(record).sort((a, b) => a.rarity - b.rarity);
 }
 
-export function getTheBestMovementInGroup(group: MovementGroup): Movement {
-  return group.movements
-    .sort(
-      (a, b) =>
-        multiply(b.combinations, "value") - multiply(a.combinations, "value"),
-    )
-    .at(0);
+function getTheBestMovementInGroup(group: MovementRarityGroup): Movement {
+  return group.movements.sort((a, b) => b.value - a.value).at(0);
 }
 
 export function getMovement(cards: Card[]): Movement {
-  const group = getGroup(cards);
+  const group = buildGroupByRarity(cards);
 
   return getTheBestMovementInGroup(group.at(0));
 }
 
 export function getMovements(cards: Card[]): Movement[] {
-  const group = getGroup(cards);
+  const group = buildGroupByRarity(cards);
 
   return group.map((g) => getTheBestMovementInGroup(g));
 }
